@@ -1,3 +1,9 @@
+// In progress. Updating notation for an arbitrary number of anchor points.
+
+// Bryan Costanza
+// Processing 3
+// inspired by and typo of https://github.com/inconvergent/sand-spline
+
 int pointCount = 5;
 
 float anchorPointsX[] = new float[pointCount];

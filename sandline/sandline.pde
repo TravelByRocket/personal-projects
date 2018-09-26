@@ -1,3 +1,9 @@
+// Hard-coded for five bezier curves. Mistake in not coordinating control points for smooth transitions.
+
+// Bryan Costanza
+// Processing 3
+// inspired by and typo of https://github.com/inconvergent/sand-spline
+
 int i = 0; // count initializer
 int n = 2000; // number of iterations
 
