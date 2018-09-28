@@ -9,14 +9,16 @@ int n = 400; // number of iterations
 int counter = 0;
 
 float noiseScale = 0.01;
-float motionScale = 500;
+float motionScale = 1000;
 
 float anchorPoints[][] = new float[pointCount][pointCount];
 float controlPointsL[][] = new float[pointCount][pointCount];
 float controlPointsR[][] = new float[pointCount][pointCount];
+float armLengthL[] = new float[pointCount];
+float armLengthR[] = new float[pointCount];
 float controlAngles[] = new float[pointCount];
 
-float addNoise[] = new float[pointCount];
+//float addNoise[] = new float[pointCount];
 
 // every bezier has two anchors and two control points
 // every anchor will have an angle going through it that control the anchors connected to it
@@ -30,12 +32,10 @@ void setup() {
   for (int i = 0; i < pointCount; i++) {
     anchorPoints[i][0] = width*(i+1)/(pointCount+1);
     anchorPoints[i][1] = height/2;
-    //controlPointsL[i][0] = anchorPoints[i][0] - width/(pointCount+1)/2; // offset left control points 1/2 the distance to previous anchor
-    //controlPointsL[i][1] = height/2; // this was correct but wanting to calc along the control angle
-    //controlPointsR[i][0] = anchorPoints[i][0] + width/(pointCount+1)/2; // offset right control points 1/2 the distance to next anchor
-    //controlPointsR[i][1] = height/2; // this was correct but wanting to calc along the control angle
-    //println(anchorPoints[i][1]);
+    armLengthL[i] = 50;
+    armLengthR[i] = 50;
   }
+  //background(#FFFFFF);
 }
 
 void draw() {
@@ -48,13 +48,15 @@ void draw() {
     // sample from Perlin noise at x location set by the anchor points (scaled) and then travel 
     // "forward" (vertically? through noise field. Map the noise to -1/2 pi tp +1/2 pi.
     controlAngles[j] = map(noise(anchorPoints[j][0]*noiseScale, counter*noiseScale), 0, 1, -HALF_PI, HALF_PI);
+    armLengthL[j] = map(noise(j*noiseScale, counter*noiseScale), 0, 1, 5, 100);
+    armLengthR[j] = map(noise(j*noiseScale+1, counter*noiseScale), 0, 1, 5, 100);
     //println(height/2 - sin(controlAngles[j]));
     //println(controlAngles[j]);
-    println(noise(anchorPoints[j][0]*noiseScale, counter*noiseScale));
-    controlPointsL[j][0] = anchorPoints[j][0] - width/(pointCount+1)/2*cos(controlAngles[j]); // offset left control points 1/2 the distance to previous anchor
-    controlPointsL[j][1] = height/2 - 50*sin(controlAngles[j]); // this was correct but wanting to calc along the control angle
-    controlPointsR[j][0] = anchorPoints[j][0] + width/(pointCount+1)/2*cos(controlAngles[j]); // offset right control points 1/2 the distance to next anchor
-    controlPointsR[j][1] = height/2 - 50*sin(controlAngles[j]); // this was correct but wanting to calc along the control angle
+    //println(noise(anchorPoints[j][0]*noiseScale, counter*noiseScale));
+    controlPointsL[j][0] = anchorPoints[j][0] - armLengthL[j]*cos(controlAngles[j]); // offset left control points 1/2 the distance to previous anchor
+    controlPointsL[j][1] = height/2 + armLengthL[j]*sin(controlAngles[j]); // this was correct but wanting to calc along the control angle
+    controlPointsR[j][0] = anchorPoints[j][0] + armLengthR[j]*cos(controlAngles[j]); // offset right control points 1/2 the distance to next anchor
+    controlPointsR[j][1] = height/2 - armLengthR[j]*sin(controlAngles[j]); // this was correct but wanting to calc along the control angle
   }
 
 
