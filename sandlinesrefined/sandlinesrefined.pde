@@ -5,6 +5,8 @@
 // inspired by and typo of https://github.com/inconvergent/sand-spline
 
 int pointCount = 5;
+int n = 400; // number of iterations
+int counter = 0;
 
 float noiseScale = 0.01;
 float motionScale = 500;
@@ -13,6 +15,8 @@ float anchorPoints[][] = new float[pointCount][pointCount];
 float controlPointsL[][] = new float[pointCount][pointCount];
 float controlPointsR[][] = new float[pointCount][pointCount];
 float controlAngles[] = new float[pointCount];
+
+float addNoise[] = new float[pointCount];
 
 // every bezier has two anchors and two control points
 // every anchor will have an angle going through it that control the anchors connected to it
@@ -26,32 +30,55 @@ void setup() {
   for (int i = 0; i < pointCount; i++) {
     anchorPoints[i][0] = width*(i+1)/(pointCount+1);
     anchorPoints[i][1] = height/2;
-    controlPointsL[i][0] = anchorPoints[i][0] - width/(pointCount+1)/2; // offset left control points 1/2 the distance to previous anchor
-    controlPointsL[i][1] = height/2;
-    controlPointsR[i][0] = anchorPoints[i][0] + width/(pointCount+1)/2; // offset right control points 1/2 the distance to next anchor
-    controlPointsR[i][1] = height/2;
+    //controlPointsL[i][0] = anchorPoints[i][0] - width/(pointCount+1)/2; // offset left control points 1/2 the distance to previous anchor
+    //controlPointsL[i][1] = height/2; // this was correct but wanting to calc along the control angle
+    //controlPointsR[i][0] = anchorPoints[i][0] + width/(pointCount+1)/2; // offset right control points 1/2 the distance to next anchor
+    //controlPointsR[i][1] = height/2; // this was correct but wanting to calc along the control angle
+    //println(anchorPoints[i][1]);
   }
 }
 
 void draw() {
-  
+  background(#FFFFFF);
   // draw the moving lines
   stroke(#0C7489);
   noFill();
-  
+
   for (int j = 0; j < pointCount; j++) {
-    
+    // sample from Perlin noise at x location set by the anchor points (scaled) and then travel 
+    // "forward" (vertically? through noise field. Map the noise to -1/2 pi tp +1/2 pi.
+    controlAngles[j] = map(noise(anchorPoints[j][0]*noiseScale, counter*noiseScale), 0, 1, -HALF_PI, HALF_PI);
+    //println(height/2 - sin(controlAngles[j]));
+    //println(controlAngles[j]);
+    println(noise(anchorPoints[j][0]*noiseScale, counter*noiseScale));
+    controlPointsL[j][0] = anchorPoints[j][0] - width/(pointCount+1)/2*cos(controlAngles[j]); // offset left control points 1/2 the distance to previous anchor
+    controlPointsL[j][1] = height/2 - 50*sin(controlAngles[j]); // this was correct but wanting to calc along the control angle
+    controlPointsR[j][0] = anchorPoints[j][0] + width/(pointCount+1)/2*cos(controlAngles[j]); // offset right control points 1/2 the distance to next anchor
+    controlPointsR[j][1] = height/2 - 50*sin(controlAngles[j]); // this was correct but wanting to calc along the control angle
   }
-  
-  
+
+
   beginShape();
-  vertex(anchorPoints[0][0], anchorPoints[0][1]);
-  for (int i = 0; i < pointCount; i++) {
+  vertex(anchorPoints[0][0], anchorPoints[0][1]); // first anchor point
+  for (int i = 0; i < pointCount-1; i++) { //once for each segment, which is 1 less than the number of points
     bezierVertex(
-    controlPointsR[i][0], controlPointsR[i][1], // right-side control point for previous anchor point
-    controlPointsL[i][0], controlPointsL[i][1], // left-side control point for next anchor point
-    anchorPoints[i][0], anchorPoints[i][1]); // the next anchor point
+      controlPointsR[i][0], controlPointsR[i][1], // right-side control point for previous anchor point
+      controlPointsL[i+1][0], controlPointsL[i+1][1], // left-side control point for next anchor point
+      anchorPoints[i+1][0], anchorPoints[i+1][1]); // thxe next anchor point
   }
   endShape();
-  
+
+  for (int k = 0; k < pointCount; k++) {
+    line(controlPointsR[k][0], controlPointsR[k][1], anchorPoints[k][0], anchorPoints[k][1]);
+    line(controlPointsL[k][0], controlPointsL[k][1], anchorPoints[k][0], anchorPoints[k][1]);
+    ellipse(controlPointsR[k][0], controlPointsR[k][1], 3, 3); // right-side control point for previous anchor point
+    ellipse(controlPointsL[k][0], controlPointsL[k][1], 3, 3); // left-side control point for next anchor point
+    //ellipse(anchorPoints[k][0], anchorPoints[k][1], 5*k, 3); // the next anchor point
+  }
+
+  if (counter == n) {
+    noLoop();
+  }
+  counter++;
+  println(counter);
 }
